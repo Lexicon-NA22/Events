@@ -40,5 +40,10 @@ namespace Events.Data.Repositories
 
             return await query.FirstOrDefaultAsync(e => e.Name == name);
         }
+
+        public async Task AddAsync(CodeEvent codeEvent)
+        {
+            await db.AddAsync(codeEvent);
+        }
     }
 }

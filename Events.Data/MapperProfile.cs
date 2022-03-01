@@ -15,6 +15,7 @@ namespace Events.Data
             CreateMap<CodeEvent, CodeEventDto>().ReverseMap();
             CreateMap<Lecture, LectureDto>().ReverseMap();
             CreateMap<Lecture, LectureCreateDto>().ReverseMap();
+            CreateMap<CodeEvent, CreateEventDto>().ReverseMap();
         }
     }
 }

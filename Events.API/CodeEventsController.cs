@@ -55,65 +55,75 @@ namespace Events.API
 
         // PUT: api/CodeEvents/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCodeEvent(Guid id, CodeEvent codeEvent)
-        {
-            if (id != codeEvent.Id)
-            {
-                return BadRequest();
-            }
+        //[HttpPut("{id}")]
+        //public async Task<IActionResult> PutCodeEvent(Guid id, CodeEvent codeEvent)
+        //{
+        //    if (id != codeEvent.Id)
+        //    {
+        //        return BadRequest();
+        //    }
 
-            _context.Entry(codeEvent).State = EntityState.Modified;
+        //    _context.Entry(codeEvent).State = EntityState.Modified;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CodeEventExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!CodeEventExists(id))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
 
-            return NoContent();
-        }
+        //    return NoContent();
+        //}
 
         // POST: api/CodeEvents
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<CodeEvent>> PostCodeEvent(CodeEvent codeEvent)
+        public async Task<ActionResult<CodeEventDto>> PostCodeEvent(CreateEventDto dto)
         {
-            _context.CodeEvent.Add(codeEvent);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetCodeEvent", new { id = codeEvent.Id }, codeEvent);
-        }
-
-        // DELETE: api/CodeEvents/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCodeEvent(Guid id)
-        {
-            var codeEvent = await _context.CodeEvent.FindAsync(id);
-            if (codeEvent == null)
+            if(await eventRepo.GetAsync(dto.Name, false) != null)
             {
-                return NotFound();
+                ModelState.AddModelError("Name", "Name exists");
+                return BadRequest();   
             }
 
-            _context.CodeEvent.Remove(codeEvent);
+            var codeEvent = mapper.Map<CodeEvent>(dto);
+            await eventRepo.AddAsync(codeEvent);
+
             await _context.SaveChangesAsync();
 
-            return NoContent();
+
+            var model = mapper.Map<CodeEventDto>(codeEvent);
+            return CreatedAtAction(nameof(GetCodeEvent), new { name = codeEvent.Name }, model);
         }
 
-        private bool CodeEventExists(Guid id)
-        {
-            return _context.CodeEvent.Any(e => e.Id == id);
-        }
+        //// DELETE: api/CodeEvents/5
+        //[HttpDelete("{id}")]
+        //public async Task<IActionResult> DeleteCodeEvent(Guid id)
+        //{
+        //    var codeEvent = await _context.CodeEvent.FindAsync(id);
+        //    if (codeEvent == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    _context.CodeEvent.Remove(codeEvent);
+        //    await _context.SaveChangesAsync();
+
+        //    return NoContent();
+        //}
+
+        //private bool CodeEventExists(Guid id)
+        //{
+        //    return _context.CodeEvent.Any(e => e.Id == id);
+        //}
     }
 }
