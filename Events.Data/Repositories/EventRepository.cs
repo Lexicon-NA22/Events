@@ -1,4 +1,5 @@
 ﻿using Events.Core.Entities;
+using Events.Core.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Events.Data.Repositories
 {
-    public class EventRepository
+    public class EventRepository : IEventRepository
     {
         private readonly EventsAPIContext db;
 
@@ -35,7 +36,7 @@ namespace Events.Data.Repositories
                           .Include(c => c.Location)
                           .AsQueryable();
 
-            if(includeLectures)
+            if (includeLectures)
                 query = query.Include(c => c.Lectures);
 
             return await query.FirstOrDefaultAsync(e => e.Name == name);

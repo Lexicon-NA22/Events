@@ -11,6 +11,9 @@ using Events.Data;
 using Events.Data.Repositories;
 using AutoMapper;
 using Events.Core.Dtos;
+using Events.Core.Repositories;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Events.API
 {
@@ -18,24 +21,35 @@ namespace Events.API
     [ApiController]
     public class CodeEventsController : ControllerBase
     {
-        private readonly EventsAPIContext _context;
+       // private readonly EventsAPIContext _context;
         private readonly IMapper mapper;
-        private readonly EventRepository eventRepo;
+        private IUnitOfWork uow;
+        //private readonly IEventRepository eventRepo;
 
-        public CodeEventsController(EventsAPIContext context, IMapper mapper)
+        public CodeEventsController(IUnitOfWork unitOfWork, IMapper mapper)
         {
-            _context = context;
+           // _context = context;
             this.mapper = mapper;
-            eventRepo = new EventRepository(_context);
+            this.uow = unitOfWork;
+            // uow = new UnitOfWork(context);
+            //eventRepo = new EventRepository(_context);
         }
 
         // GET: api/CodeEvents
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CodeEventDto>>> GetCodeEvent(bool includeLectures)
         {
-            var events = await eventRepo.GetAsync(includeLectures);
+           
+
+            var events = await uow.EventRepo.GetAsync(includeLectures);
             return Ok(mapper.Map<IEnumerable<CodeEventDto>>(events));
         }
+
+        //public async Task<ActionResult> Test()
+        //{
+        //    var options = new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.IgnoreCycles };
+        //    return new JsonResult(await uow.EventRepo.GetAsync(true), options);
+        //}
 
         // GET: api/CodeEvents/5
         [HttpGet("{name}")]
@@ -44,7 +58,7 @@ namespace Events.API
 
             if(string.IsNullOrEmpty(name))  return BadRequest();
 
-            var codeEvent = await eventRepo.GetAsync(name, includeLectures);
+            var codeEvent = await uow.EventRepo.GetAsync(name, includeLectures);
 
             if (codeEvent == null) return NotFound();
 
@@ -89,17 +103,16 @@ namespace Events.API
         [HttpPost]
         public async Task<ActionResult<CodeEventDto>> PostCodeEvent(CreateEventDto dto)
         {
-            if(await eventRepo.GetAsync(dto.Name, false) != null)
+            if(await uow.EventRepo.GetAsync(dto.Name, false) != null)
             {
                 ModelState.AddModelError("Name", "Name exists");
                 return BadRequest();   
             }
 
             var codeEvent = mapper.Map<CodeEvent>(dto);
-            await eventRepo.AddAsync(codeEvent);
+            await uow.EventRepo.AddAsync(codeEvent);
 
-            await _context.SaveChangesAsync();
-
+            await uow.CompleteAsync();
 
             var model = mapper.Map<CodeEventDto>(codeEvent);
             return CreatedAtAction(nameof(GetCodeEvent), new { name = codeEvent.Name }, model);
