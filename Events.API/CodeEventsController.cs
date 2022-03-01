@@ -38,17 +38,19 @@ namespace Events.API
         }
 
         // GET: api/CodeEvents/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<CodeEvent>> GetCodeEvent(Guid id)
+        [HttpGet("{name}")]
+        public async Task<ActionResult<CodeEventDto>> GetCodeEvent(string name, bool includeLectures)
         {
-            var codeEvent = await _context.CodeEvent.FindAsync(id);
 
-            if (codeEvent == null)
-            {
-                return NotFound();
-            }
+            if(string.IsNullOrEmpty(name))  return BadRequest();
 
-            return codeEvent;
+            var codeEvent = await eventRepo.GetAsync(name, includeLectures);
+
+            if (codeEvent == null) return NotFound();
+
+            var dto = mapper.Map<CodeEventDto>(codeEvent);
+
+            return Ok(dto);
         }
 
         // PUT: api/CodeEvents/5

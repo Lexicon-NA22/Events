@@ -25,5 +25,20 @@ namespace Events.Data.Repositories
                                       await db.CodeEvent.Include(c => c.Location)
                                                         .ToListAsync();
         }
+
+
+        public async Task<CodeEvent> GetAsync(string name, bool includeLectures)
+        {
+            if (string.IsNullOrEmpty(name)) throw new ArgumentException(nameof(name));
+
+            var query = db.CodeEvent
+                          .Include(c => c.Location)
+                          .AsQueryable();
+
+            if(includeLectures)
+                query = query.Include(c => c.Lectures);
+
+            return await query.FirstOrDefaultAsync(e => e.Name == name);
+        }
     }
 }
