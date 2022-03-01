@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Events.API
 {
@@ -35,6 +36,9 @@ namespace Events.API
             });
 
             services.AddAutoMapper(typeof(MapperProfile));
+
+            services.AddDbContext<EventsAPIContext>(options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("EventsAPIContext")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
