@@ -29,7 +29,9 @@ namespace Events.API
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddControllers();
+            services.AddControllers(opt => opt.ReturnHttpNotAcceptable = true)
+                    .AddNewtonsoftJson();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Events.API", Version = "v1" });
