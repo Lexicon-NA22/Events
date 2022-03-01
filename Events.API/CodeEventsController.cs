@@ -8,25 +8,33 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Events.Core.Entities;
 using Events.Data;
+using Events.Data.Repositories;
+using AutoMapper;
+using Events.Core.Dtos;
 
 namespace Events.API
 {
-    [Route("api/[controller]")]
+    [Route("api/events")]
     [ApiController]
     public class CodeEventsController : ControllerBase
     {
         private readonly EventsAPIContext _context;
+        private readonly IMapper mapper;
+        private readonly EventRepository eventRepo;
 
-        public CodeEventsController(EventsAPIContext context)
+        public CodeEventsController(EventsAPIContext context, IMapper mapper)
         {
             _context = context;
+            this.mapper = mapper;
+            eventRepo = new EventRepository(_context);
         }
 
         // GET: api/CodeEvents
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CodeEvent>>> GetCodeEvent()
+        public async Task<ActionResult<IEnumerable<CodeEventDto>>> GetCodeEvent(bool includeLectures)
         {
-            return await _context.CodeEvent.ToListAsync();
+            var events = await eventRepo.GetAsync(includeLectures);
+            return Ok(mapper.Map<IEnumerable<CodeEventDto>>(events));
         }
 
         // GET: api/CodeEvents/5
