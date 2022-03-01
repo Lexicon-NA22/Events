@@ -31,6 +31,7 @@ namespace Events.API
 
             services.AddControllers(opt => opt.ReturnHttpNotAcceptable = true)
                     .AddNewtonsoftJson();
+                   // .AddXmlDataContractSerializerFormatters();
 
             services.AddSwaggerGen(c =>
             {

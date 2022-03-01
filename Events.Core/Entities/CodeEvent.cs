@@ -13,7 +13,6 @@ namespace Events.Core.Entities
         public DateTime EventDate { get; set; }
         public int Length { get; set; }
 
-        // public int LocationId { get; set; }
         public Location Location { get; set; }
 
         public ICollection<Lecture> Lectures { get; set; }
