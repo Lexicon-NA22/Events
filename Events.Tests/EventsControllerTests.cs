@@ -5,6 +5,7 @@ using Events.Core.Entities;
 using Events.Core.Paging;
 using Events.Core.Repositories;
 using Events.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -34,7 +35,19 @@ namespace Events.Tests
                 cfg.AddProfile<MapperProfile>();
             }));
 
-            controller = new CodeEventsController(mockUoW.Object, mapper);
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockResponse = new Mock<HttpResponse>();
+            var headers = new Mock<IHeaderDictionary>();
+            mockResponse.SetupGet(r => r.Headers).Returns(headers.Object);
+            mockHttpContext.SetupGet(c => c.Response).Returns(mockResponse.Object);
+
+            controller = new CodeEventsController(mockUoW.Object, mapper)
+            {
+                ControllerContext = new ControllerContext()
+                {
+                    HttpContext = mockHttpContext.Object
+                }
+            };
         }
 
 
@@ -54,7 +67,10 @@ namespace Events.Tests
 
             var actual = await controller.GetCodeEvent(includeLectures, pagingParams);
 
+            var responseHeaders = controller.Response.Headers["X-Pagination"];
+
             Assert.IsInstanceOfType(actual.Result, typeof(OkObjectResult));
+          
             
         }
 
