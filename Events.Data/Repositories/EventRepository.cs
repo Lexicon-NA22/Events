@@ -25,9 +25,7 @@ namespace Events.Data.Repositories
             return includeLectures ? await PagingResult<CodeEvent>.CreateAsync(db.CodeEvent.Include(c => c.Location)
                                                                                             .Include(c => c.Lectures)
                                                                                             .OrderBy(c => c.Name), pagingParams) :
-                                      //.Skip((pagingParams.PageNumber -1) * pagingParams.PageSize)
-                                      //.Take(pagingParams.PageSize)
-                                      //.ToListAsync() :
+                                    
                                       await PagingResult<CodeEvent>.CreateAsync(db.CodeEvent.Include(c => c.Location)
                                                                                               .OrderBy(c => c.Name), pagingParams);       
                                                        

@@ -44,7 +44,7 @@ namespace Events.API
         {
             var pagingResult = await uow.EventRepo.GetAsync(includeLectures, pagingParams);
 
-            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(pagingResult.MetaData));
+            Response?.Headers.Add("X-Pagination", JsonConvert.SerializeObject(pagingResult.MetaData));
 
             return Ok(mapper.Map<IEnumerable<CodeEventDto>>(pagingResult.Items));
         }
