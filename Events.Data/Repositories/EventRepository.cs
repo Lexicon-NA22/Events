@@ -1,4 +1,5 @@
 ﻿using Events.Core.Entities;
+using Events.Core.Paging;
 using Events.Core.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -18,13 +19,18 @@ namespace Events.Data.Repositories
             this.db = db;
         }
 
-        public async Task<IEnumerable<CodeEvent>> GetAsync(bool includeLectures)
+        public async Task<PagingResult<CodeEvent>> GetAsync(bool includeLectures, PagingParams pagingParams)
         {
-            return includeLectures ? await db.CodeEvent.Include(c => c.Location)
-                                                        .Include(c => c.Lectures)
-                                                        .ToListAsync() :
-                                      await db.CodeEvent.Include(c => c.Location)
-                                                        .ToListAsync();
+
+            return includeLectures ? await PagingResult<CodeEvent>.CreateAsync(db.CodeEvent.Include(c => c.Location)
+                                                                                            .Include(c => c.Lectures)
+                                                                                            .OrderBy(c => c.Name), pagingParams) :
+                                      //.Skip((pagingParams.PageNumber -1) * pagingParams.PageSize)
+                                      //.Take(pagingParams.PageSize)
+                                      //.ToListAsync() :
+                                      await PagingResult<CodeEvent>.CreateAsync(db.CodeEvent.Include(c => c.Location)
+                                                                                              .OrderBy(c => c.Name), pagingParams);       
+                                                       
         }
 
 

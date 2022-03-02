@@ -14,6 +14,9 @@ using Events.Core.Dtos;
 using Events.Core.Repositories;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.JsonPatch;
+using Events.Core.Paging;
+using Newtonsoft.Json;
 
 namespace Events.API
 {
@@ -37,12 +40,13 @@ namespace Events.API
 
         // GET: api/CodeEvents
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CodeEventDto>>> GetCodeEvent(bool includeLectures)
+        public async Task<ActionResult<IEnumerable<CodeEventDto>>> GetCodeEvent(bool includeLectures,[FromQuery] PagingParams pagingParams)
         {
-           
+            var pagingResult = await uow.EventRepo.GetAsync(includeLectures, pagingParams);
 
-            var events = await uow.EventRepo.GetAsync(includeLectures);
-            return Ok(mapper.Map<IEnumerable<CodeEventDto>>(events));
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(pagingResult.MetaData));
+
+            return Ok(mapper.Map<IEnumerable<CodeEventDto>>(pagingResult.Items));
         }
 
         //public async Task<ActionResult> Test()
@@ -65,6 +69,46 @@ namespace Events.API
             var dto = mapper.Map<CodeEventDto>(codeEvent);
 
             return Ok(dto);
+        }
+
+        [HttpPatch("{name}")]
+        public async Task<ActionResult<CodeEventDto>> PatchEvent(string name, JsonPatchDocument<CodeEventDto> patchDocument)
+        {
+            var codeEvent = await uow.EventRepo.GetAsync(name, true);
+
+            if (codeEvent is null) return NotFound();
+
+            var dto = mapper.Map<CodeEventDto>(codeEvent);
+
+            patchDocument.ApplyTo(dto, ModelState);
+
+            if (!TryValidateModel(dto)) return BadRequest(ModelState);
+
+            mapper.Map(dto, codeEvent);
+
+            await uow.CompleteAsync();
+            return Ok(mapper.Map<CodeEventDto>(codeEvent));
+           
+        }
+
+        // POST: api/CodeEvents
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<CodeEventDto>> PostCodeEvent(CreateEventDto dto)
+        {
+            if(await uow.EventRepo.GetAsync(dto.Name, false) != null)
+            {
+                ModelState.AddModelError("Name", "Name exists");
+                return BadRequest();   
+            }
+
+            var codeEvent = mapper.Map<CodeEvent>(dto);
+            await uow.EventRepo.AddAsync(codeEvent);
+
+            await uow.CompleteAsync();
+
+            var model = mapper.Map<CodeEventDto>(codeEvent);
+            return CreatedAtAction(nameof(GetCodeEvent), new { name = codeEvent.Name }, model);
         }
 
         // PUT: api/CodeEvents/5
@@ -97,26 +141,6 @@ namespace Events.API
 
         //    return NoContent();
         //}
-
-        // POST: api/CodeEvents
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<CodeEventDto>> PostCodeEvent(CreateEventDto dto)
-        {
-            if(await uow.EventRepo.GetAsync(dto.Name, false) != null)
-            {
-                ModelState.AddModelError("Name", "Name exists");
-                return BadRequest();   
-            }
-
-            var codeEvent = mapper.Map<CodeEvent>(dto);
-            await uow.EventRepo.AddAsync(codeEvent);
-
-            await uow.CompleteAsync();
-
-            var model = mapper.Map<CodeEventDto>(codeEvent);
-            return CreatedAtAction(nameof(GetCodeEvent), new { name = codeEvent.Name }, model);
-        }
 
         //// DELETE: api/CodeEvents/5
         //[HttpDelete("{id}")]
